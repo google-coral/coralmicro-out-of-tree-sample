@@ -1,0 +1,3 @@
+[submodule "valiant"]
+	path = valiant
+	url = https://spacepark.googlesource.com/valiant/valiant
