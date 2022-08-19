@@ -1,35 +1,65 @@
-# Add Valiant as a submodule
-```
-git submodule add https://github.com/google-coral/coralmicro valiant
-git submodule update --init --recursive
+# Example OOT project for Dev Board Micro
+
+This is a "Hello World" out-of-tree project for [Coral Dev Board Micro]
+(https://coral.ai/products/dev-board-micro). This serves as a starting point for your own Dev Board
+Micro projects.
+
+No code changes are required to get started. Just follow the steps below to clone this project and
+all its submodules. Then build it and flash it to your Dev Board Micro.
+
+Alternatively, you can build your project inside the `coralmicro` tree, as described in the
+guide to [build apps with FreeRTOS](https://coral.ai/docs/dev-board-micro/freertos/).
+
+**Note:** `coralmicro` with all its submodules needs about 2.5 GB.
+
+
+## 1. Set up the project
+
+1. Clone this repo:
+
+    ```bash
+    git clone https://github.com/google-coral/coralmicro-out-of-tree-sample
+    ```
+
+2. Initialize the `coralmicro` submodule:
+
+    ```bash
+    cd out-of-tree-sample
+
+    git submodule add https://github.com/google-coral/coralmicro coralmicro
+
+    git submodule update --init --recursive
+    ```
+
+
+## 2. Build the project
+
+```bash
+cmake -B out -S .
+
+make -C out -j4
 ```
 
-# Minimal CMakeLists.txt
-```
-cmake_minimum_required(VERSION 3.13)
+To maximize your CPU usage, replace `-j4` with either `-j$(nproc)` on Linux or
+`-j$(sysctl -n hw.ncpu)` on Mac.
 
-# Toolchain must be set before project() call.
-if (NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_LIST_DIR}/valiant/cmake/toolchain-arm-none-eabi-gcc.cmake)
-endif()
 
-project(valiant-app)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+## 3. Flash it to your board
 
-include_directories(valiant)
-add_subdirectory(valiant)
+```bash
+python3 coralmicro/scripts/flashtool.py --build_dir out --elf_path out/coralmicro-app
 ```
 
-Afterwards, the `add_executable_{m4,m7}` and `add_library_{m4,m7}` functions are available for use.
+Anytime you make changes to the code, rebuild it with the `make` command and flash it again.
 
-# Building the sample
-```
-cmake -B build .
-make -C build -j$(nproc)
-```
+**Note:** In addition to specifying the path to your project's ELF file with `elf_path`, it's
+necessary to specify the build output directory with `build_dir` because flashtool needs to get
+the ELFLoader (bootloader) program from there.
 
-# Flash device with the sample
-```
-valiant/scripts/flashtool.py --build_dir build --elf_path build/valiant-app.stripped
-```
+If you followed the guide to [get started with the Dev Board
+Micro](https://coral.ai/docs/dev-board-micro/get-started/), then both the `build_dir` and `elf_path`
+arguments are probably new to you. That's because when flashing in-tree examples and apps (as we do
+in that guide), the `build_dir` is ommitted because the flashtool uses the local `build` directory
+by default. Similarly, in-tree examples and apps don't need to specify the ELF file with `elf_path`
+because those files are built in the same build directory—we can instead specify just the project
+name with `--example` (or `-e`) and `--app` (or `-a`) when flashing these in-tree projects.
