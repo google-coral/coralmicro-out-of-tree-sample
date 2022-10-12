@@ -1,46 +1,35 @@
 # Example OOT project for Dev Board Micro
 
-This is a "Hello World" out-of-tree project for [Coral Dev Board Micro]
-(https://coral.ai/products/dev-board-micro). This serves as a starting point for your own Dev Board
-Micro projects.
+This is a "Hello World" out-of-tree project for the [Coral Dev Board
+Micro](https://coral.ai/products/dev-board-micro).
 
-No code changes are required to get started. Just follow the steps below to clone this project and
-all its submodules. Then build it and flash it to your Dev Board Micro.
+This serves as a starting point for your own
+Dev Board Micro projects when you want your project to live outside the 
+[coralmicro](https://github.com/google-coral/coralmicro) tree, rather than inside it.
+For more information about creating a project, either in-tree or out-of-tree, see the guide
+to [Build apps with FreeRTOS for the Dev Board Micro](https://coral.ai/docs/dev-board-micro/freertos/).
 
-Alternatively, you can build your project inside the `coralmicro` tree, as described in the
-guide to [build apps with FreeRTOS](https://coral.ai/docs/dev-board-micro/freertos/).
-
-**Note:** `coralmicro` with all its submodules needs about 2.5 GB.
+**Note:** This project depends on [coralmicro](https://github.com/google-coral/coralmicro),
+which requires about 2.5 GB.
 
 
-## 1. Set up the project
+## 1. Clone this project and submodules
 
-1. Clone this repo:
-
-    ```bash
-    git clone https://github.com/google-coral/coralmicro-out-of-tree-sample
-    ```
-
-2. Initialize the `coralmicro` submodule:
-
-    ```bash
-    cd out-of-tree-sample
-
-    git submodule add https://github.com/google-coral/coralmicro coralmicro
-
-    git submodule update --init --recursive
-    ```
-
+```bash
+git clone --recurse-submodules -j8 https://github.com/google-coral/coralmicro-out-of-tree-sample
+```
 
 ## 2. Build the project
 
 ```bash
+cd coralmicro-out-of-tree-sample
+
 cmake -B out -S .
 
-make -C out -j4
+make -C out -j8
 ```
 
-To maximize your CPU usage, replace `-j4` with either `-j$(nproc)` on Linux or
+To maximize your CPU usage, replace `-j8` with either `-j$(nproc)` on Linux or
 `-j$(sysctl -n hw.ncpu)` on Mac.
 
 
@@ -54,7 +43,7 @@ Anytime you make changes to the code, rebuild it with the `make` command and fla
 
 **Note:** In addition to specifying the path to your project's ELF file with `elf_path`, it's
 necessary to specify the build output directory with `build_dir` because flashtool needs to get
-the ELFLoader (bootloader) program from there.
+the elf_loader (bootloader) program from there.
 
 If you followed the guide to [get started with the Dev Board
 Micro](https://coral.ai/docs/dev-board-micro/get-started/), then both the `build_dir` and `elf_path`
