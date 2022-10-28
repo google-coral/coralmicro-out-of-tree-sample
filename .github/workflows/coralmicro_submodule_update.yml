@@ -1,0 +1,56 @@
+name: Sync CoralMicro 
+
+# Daily run that detects changes in coralmicro and send in PR with submodule update if there has been a change.
+
+on:
+  push:
+  schedule:
+    # 2pm UTC is 7am or 8am PT depending on daylight savings.
+    - cron: '0 14 * * *'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ssh-key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          submodules: recursive
+
+      - name: Check MicroCoral Changes 
+        run: |
+          git submodule update --remote # Updates coralmicro if there has been a change.
+          git config --local user.name "coralmicro-bot"
+          git config --local user.email "coralmicro-bot@google.com"
+          git add *
+          if [[ $(git status --porcelain | wc -l) == 0 ]]; then
+            echo "No changes detected." >> README.md
+          else
+            echo "update=true" >> $GITHUB_ENV
+            git commit -m "Sync coralmicro from upstream."
+          fi
+
+      - name: Build
+        if: env.update
+        run: |
+          bash coralmicro/setup.sh
+          cmake -B build -S .
+          make -C build -j$(nproc)
+          rm -rf build
+
+      - name: Create Pull Request
+        #if: env.update
+        id: create-pr
+        uses: peter-evans/create-pull-request@052fc72b4198ba9fbc81b818c6e1859f747d49a8
+        with:
+          branch: sync-from-upstream-coralmicro
+          delete-branch: true
+          ssh-key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          title: Automated sync from github.com/google-coral/coralmicro
+          commit-message: Automated sync from github.com/google-coral/coralmicro
+          committer: coralmicro-bot <coralmicro-bot@google.com>
+          author: coralmicro-bot <coralmicro-bot@google.com>
+          body: "automated coralmicro sync from upstream"
+          reviewers: namburger, mbrooksx
+
