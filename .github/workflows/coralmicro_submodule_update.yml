@@ -1,0 +1,46 @@
+# Daily run that detects changes in coralmicro and send in PR with submodule update if there has been a change.
+name: Sync CoralMicro 
+
+on:
+  push:
+  schedule:
+    # 2pm UTC is 7am or 8am PT depending on daylight savings.
+    - cron: '0 14 * * *'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ssh-key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          submodules: recursive
+
+      - name: Check MicroCoral Changes 
+        run: |
+          git submodule update --remote # Updates coralmicro if there has been a change.
+          git config --local user.name "Coral Bot"
+          git config --local user.email "noreply@google.com"
+          git add *
+          if [[ $(git status --porcelain | wc -l) == 0 ]]; then
+            echo "No changes detected." >> README.md
+          else
+            echo "update=true" >> $GITHUB_ENV
+            git commit -m "Sync coralmicro from upstream."
+          fi
+
+      - name: Build
+        # if: env.update
+        run: |
+          bash coralmicro/setup.sh
+          cmake -B build -S .
+          make -C build -j$(nproc)
+          rm -rf build
+
+      - name: Push Update
+        # if: env.update
+        uses: ad-m/github-push-action@4dcce6dea3e3c8187237fc86b7dfdc93e5aaae58
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: fake-main
