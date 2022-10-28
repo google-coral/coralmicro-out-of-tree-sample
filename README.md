@@ -52,3 +52,4 @@ in that guide), the `build_dir` is ommitted because the flashtool uses the local
 by default. Similarly, in-tree examples and apps don't need to specify the ELF file with `elf_path`
 because those files are built in the same build directory—we can instead specify just the project
 name with `--example` (or `-e`) and `--app` (or `-a`) when flashing these in-tree projects.
+No changes detected.
